@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daily Finds – Cute things worth buying</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#fff7fa;--card:#fff;--text:#3a2a33;--muted:#8a7480;--pink:#ff6fa5;--pink2:#ffe0ec;--line:#f3d5e1}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1519;--card:#2a1f25;--text:#f7e9ef;--muted:#b9a0ab;--pink:#ff7fb0;--pink2:#4a2a39;--line:#443039}}
+:root[data-theme="dark"]{--bg:#1d1519;--card:#2a1f25;--text:#f7e9ef;--muted:#b9a0ab;--pink:#ff7fb0;--pink2:#4a2a39;--line:#443039}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif}
+header{text-align:center;padding:36px 16px 12px}
+h1{margin:0;font-size:2rem}h1 span{color:var(--pink)}
+header p{color:var(--muted);margin:6px 0 0}
+.bar{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:960px;margin:18px auto;padding:0 16px}
+input,select{padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit}
+input{flex:1;min-width:200px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:960px;margin:0 auto;padding:0 16px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--text);padding:6px 14px;border-radius:999px;cursor:pointer;font:inherit}
+.chip.on{background:var(--pink);color:#fff;border-color:var(--pink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;max-width:1100px;margin:22px auto;padding:0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;transition:transform .15s}
+.card:hover{transform:translateY(-4px)}
+.img{height:170px;display:flex;align-items:center;justify-content:center;font-size:4.5rem;position:relative;cursor:pointer}
+.tag{position:absolute;top:10px;left:10px;background:#fff;color:#c2336f;font-size:.72rem;font-weight:700;padding:3px 9px;border-radius:999px}
+.vid{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.55);color:#fff;font-size:.72rem;padding:3px 9px;border-radius:999px}
+.body{padding:14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.name{font-weight:800;cursor:pointer}
+.meta{color:var(--muted);font-size:.82rem}
+.price{font-size:1.15rem;font-weight:800;color:var(--pink)}.price s{color:var(--muted);font-weight:400;font-size:.85rem;margin-left:6px}
+.btn{margin-top:auto;display:block;text-align:center;background:var(--pink);color:#fff;text-decoration:none;font-weight:800;padding:10px;border-radius:12px}
+.btn:hover{filter:brightness(1.08)}
+.empty{text-align:center;color:var(--muted);padding:40px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal.open{display:flex}
+.sheet{background:var(--card);border-radius:24px;max-width:560px;width:100%;max-height:90vh;overflow:auto;padding:18px;position:relative}
+.x{position:absolute;top:10px;right:14px;border:0;background:none;font-size:1.6rem;color:var(--muted);cursor:pointer}
+.big{height:220px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:7rem}
+.thumbs{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
+.th{width:64px;height:64px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:2rem;cursor:pointer;border:2px solid transparent}
+.th.on{border-color:var(--pink)}
+.video{height:150px;border-radius:14px;background:var(--pink2);display:flex;align-items:center;justify-content:center;color:var(--muted);margin:10px 0;text-align:center;padding:10px}
+footer{text-align:center;color:var(--muted);font-size:.8rem;padding:20px 16px 40px;max-width:700px;margin:0 auto}
+</style>
+</head>
+<body>
+<header>
+<h1>🛍️ Daily <span>Finds</span></h1>
+<p>Hand-picked cute things from around the web. Tap, love, buy.</p>
+</header>
+<div class="bar">
+<input id="q" placeholder="Search cute stuff… (plushie, mug, stationery)">
+<select id="sort"><option value="pop">Most loved</option><option value="lo">Price: low to high</option><option value="hi">Price: high to low</option><option value="off">Biggest discount</option></select>
+</div>
+<div class="chips" id="chips"></div>
+<main class="grid" id="grid"></main>
+
+<div class="modal" id="m"><div class="sheet" id="sheet"></div></div>
+
+<footer>As an affiliate we may earn a small commission when you buy through our links, at no extra cost to you. Prices and availability may change on the seller's site.</footer>
+
+<script>
+// Replace each "url" with your real affiliate link (Amazon Associates, Flipkart, Myntra, etc.)
+var P=[
+{id:1,n:"Capybara Plushie",e:"🦫",c:"Plushies",p:799,o:1199,s:"Amazon",r:4.8,rv:2310,t:"Bestseller",bg:"#ffe6c7",d:"Super soft 30cm capybara with a tiny orange on its head. Hypoallergenic filling, machine washable.",url:"https://example.com/aff/capybara?tag=YOURTAG"},
+{id:2,n:"Kawaii Bunny Mug",e:"🐰",c:"Home",p:349,o:499,s:"Flipkart",r:4.6,rv:880,t:"New",bg:"#ffe0ec",d:"Ceramic 350ml mug with a bunny-ear lid and spoon. Microwave safe.",url:"https://example.com/aff/mug?tag=YOURTAG"},
+{id:3,n:"Pastel Gel Pen Set (24)",e:"🖍️",c:"Stationery",p:249,o:399,s:"Amazon",r:4.7,rv:1540,t:"Deal",bg:"#e3f0ff",d:"24 pastel colours, 0.5mm tip, smooth quick-dry ink. Perfect for journaling.",url:"https://example.com/aff/pens?tag=YOURTAG"},
+{id:4,n:"Cloud Night Lamp",e:"☁️",c:"Home",p:999,o:1499,s:"Amazon",r:4.5,rv:640,t:"Trending",bg:"#e6e3ff",d:"Dimmable USB cloud lamp with 7 colours and a touch switch.",url:"https://example.com/aff/lamp?tag=YOURTAG"},
+{id:5,n:"Cat Paw Phone Case",e:"🐱",c:"Accessories",p:299,o:449,s:"Myntra",r:4.4,rv:420,t:"",bg:"#ffeacc",d:"Shockproof silicone case with a squishy paw pad on the back.",url:"https://example.com/aff/case?tag=YOURTAG"},
+{id:6,n:"Strawberry Tote Bag",e:"🍓",c:"Accessories",p:449,o:699,s:"Flipkart",r:4.6,rv:760,t:"Deal",bg:"#ffd9de",d:"Heavy cotton canvas tote with embroidered strawberries and an inner zip pocket.",url:"https://example.com/aff/tote?tag=YOURTAG"},
+{id:7,n:"Mini Succulent Kit",e:"🌵",c:"Home",p:399,o:0,s:"Amazon",r:4.3,rv:310,t:"",bg:"#dff5e1",d:"Three mini succulents in pastel pots, ready to display on your desk.",url:"https://example.com/aff/plants?tag=YOURTAG"},
+{id:8,n:"Sticker Pack – Cute Animals",e:"🐼",c:"Stationery",p:149,o:249,s:"Amazon",r:4.9,rv:3120,t:"Bestseller",bg:"#eeeeee",d:"100 waterproof vinyl stickers for laptops, bottles and journals.",url:"https://example.com/aff/stickers?tag=YOURTAG"}
+];
+var cat="All",cats=["All"].concat(Array.from(new Set(P.map(function(x){return x.c}))));
+var $=function(i){return document.getElementById(i)};
+function inr(n){return "₹"+n.toLocaleString("en-IN")}
+function off(x){return x.o?Math.round((1-x.p/x.o)*100):0}
+function chips(){$("chips").innerHTML=cats.map(function(c){return '<button class="chip'+(c===cat?' on':'')+'" data-c="'+c+'">'+c+'</button>'}).join("")}
+function render(){
+var q=$("q").value.toLowerCase(),s=$("sort").value;
+var L=P.filter(function(x){return (cat==="All"||x.c===cat)&&(x.n+x.c+x.d).toLowerCase().indexOf(q)>-1});
+L.sort(function(a,b){return s==="lo"?a.p-b.p:s==="hi"?b.p-a.p:s==="off"?off(b)-off(a):b.rv-a.rv});
+$("grid").innerHTML=L.length?L.map(function(x){return '<article class="card"><div class="img" data-id="'+x.id+'" style="background:'+x.bg+'">'+x.e+(x.t?'<span class="tag">'+x.t+'</span>':'')+'<span class="vid">▶ video</span></div><div class="body"><div class="name" data-id="'+x.id+'">'+x.n+'</div><div class="meta">⭐ '+x.r+' ('+x.rv.toLocaleString()+') · '+x.s+'</div><div class="price">'+inr(x.p)+(x.o?'<s>'+inr(x.o)+'</s> <small>'+off(x)+'% off</small>':'')+'</div><a class="btn" href="'+x.url+'" target="_blank" rel="sponsored noopener nofollow">Buy on '+x.s+' ↗</a></div></article>'}).join(""):'<div class="empty">No cute things found 🥺</div>'}
+function open_(id){
+var x=P.filter(function(y){return y.id==id})[0],alt=[x.e,"📦","🎁"];
+$("sheet").innerHTML='<button class="x" id="cl">×</button><div class="big" id="big" style="background:'+x.bg+'">'+x.e+'</div><div class="thumbs">'+alt.map(function(a,i){return '<div class="th'+(i?'':' on')+'" data-e="'+a+'" style="background:'+x.bg+'">'+a+'</div>'}).join("")+'</div><h2 style="margin:6px 0">'+x.n+'</h2><div class="meta">⭐ '+x.r+' · '+x.rv.toLocaleString()+' reviews · Sold on '+x.s+'</div><p>'+x.d+'</p><div class="video">🎬 Product video goes here<br><small>(paste a YouTube embed or MP4 link)</small></div><div class="price" style="font-size:1.5rem">'+inr(x.p)+(x.o?'<s>'+inr(x.o)+'</s>':'')+'</div><br><a class="btn" href="'+x.url+'" target="_blank" rel="sponsored noopener nofollow">Buy on '+x.s+' ↗</a>';
+$("m").classList.add("open")}
+document.addEventListener("click",function(e){
+var t=e.target,c=t.closest(".chip"),d=t.closest("[data-id]"),th=t.closest(".th");
+if(c){cat=c.dataset.c;chips();render()}
+else if(th){$("big").textContent=th.dataset.e;document.querySelectorAll(".th").forEach(function(n){n.classList.remove("on")});th.classList.add("on")}
+else if(d){open_(d.dataset.id)}
+else if(t.id==="cl"||t.id==="m"){$("m").classList.remove("open")}});
+$("q").oninput=render;$("sort").onchange=render;
+chips();render();
+</script>
+</body>
+</html>
