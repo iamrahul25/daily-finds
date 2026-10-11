@@ -1,19 +1,22 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { discount, products, type Product } from "@/lib/products";
+import { discount, type Product } from "@/lib/products";
 import ProductCard from "./ProductCard";
 import ProductModal from "./ProductModal";
 
 type Sort = "pop" | "lo" | "hi" | "off";
 
-const categories = ["All", ...new Set(products.map((p) => p.category))];
+// Newly added products have no reviews yet; keep them on top of "Most loved" in their original (newest-first) order.
+const popularity = (p: Product) => p.reviews ?? Number.MAX_SAFE_INTEGER;
 
-export default function Catalog() {
+export default function Catalog({ products }: { products: Product[] }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("pop");
   const [category, setCategory] = useState("All");
   const [selected, setSelected] = useState<Product | null>(null);
+
+  const categories = useMemo(() => ["All", ...new Set(products.map((p) => p.category))], [products]);
 
   const list = useMemo(() => {
     const q = query.toLowerCase();
@@ -27,9 +30,9 @@ export default function Catalog() {
         if (sort === "lo") return a.price - b.price;
         if (sort === "hi") return b.price - a.price;
         if (sort === "off") return discount(b) - discount(a);
-        return b.reviews - a.reviews;
+        return popularity(b) - popularity(a);
       });
-  }, [query, sort, category]);
+  }, [products, query, sort, category]);
 
   return (
     <>

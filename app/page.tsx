@@ -1,6 +1,10 @@
 import Catalog from "@/components/Catalog";
+import { getCloudProducts } from "@/lib/catalog";
+import { dummyProducts } from "@/lib/products";
 
-export default function Home() {
+export default async function Home() {
+  const cloudProducts = await getCloudProducts();
+
   return (
     <>
       <header>
@@ -10,7 +14,7 @@ export default function Home() {
         <p>Fresh finds every day, hand-picked from around the web.</p>
       </header>
 
-      <Catalog />
+      <Catalog products={[...cloudProducts, ...dummyProducts]} />
     </>
   );
 }

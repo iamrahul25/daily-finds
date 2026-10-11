@@ -117,6 +117,9 @@ input { flex: 1; min-width: 200px; }
   position: relative;
   cursor: pointer;
 }
+.img img,
+.big img { width: 100%; height: 100%; object-fit: cover; }
+.big { overflow: hidden; }
 .tag {
   position: absolute;
   top: 10px;
@@ -224,3 +227,41 @@ input { flex: 1; min-width: 200px; }
   text-align: center;
   padding: 10px;
 }
+.admin { max-width: 760px; margin: 18px auto 60px; padding: 0 16px; display: flex; flex-direction: column; gap: 18px; }
+.admin h2 { margin: 0 0 4px; font-size: 1.2rem; }
+.admin-top { display: flex; justify-content: space-between; align-items: center; }
+.admin-top a { color: var(--pink); font-weight: 700; text-decoration: none; }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 18px; }
+.form { display: flex; flex-direction: column; gap: 12px; }
+.form label { display: flex; flex-direction: column; gap: 4px; font-weight: 700; font-size: 0.9rem; min-width: 0; }
+.form input,
+.form textarea { width: 100%; min-width: 0; border-radius: 12px; font-weight: 400; }
+.form textarea { padding: 10px 14px; border: 1px solid var(--line); background: var(--card); color: var(--text); font: inherit; resize: vertical; }
+.form .row { display: flex; gap: 12px; flex-wrap: wrap; }
+.form .row label { flex: 1; min-width: 160px; }
+.form button.btn { border: 0; cursor: pointer; font: inherit; font-weight: 800; }
+.form button.btn:disabled { opacity: 0.6; cursor: wait; }
+.image-pick {
+  height: 200px;
+  border: 2px dashed var(--line);
+  border-radius: 16px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  color: var(--muted);
+  position: relative;
+}
+.image-pick img { width: 100%; height: 100%; object-fit: contain; }
+.image-pick input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.notice { margin: 0; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; }
+.notice.error { background: #ffe1e1; color: #a1262f; }
+.notice.ok { background: #dff5e1; color: #1f6b33; }
+.muted { color: var(--muted); }
+.admin-list { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.admin-list li { display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
+.admin-list img { width: 56px; height: 56px; object-fit: cover; border-radius: 12px; flex: none; }
+.admin-list li > div { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.admin-list li > div span { font-size: 0.85rem; }
+.chip.danger { color: #c2333f; border-color: #f2b8bd; }
+.chip:disabled { opacity: 0.6; }
