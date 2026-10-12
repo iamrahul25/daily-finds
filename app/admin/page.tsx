@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { isAdmin, isAdminPasswordSet } from "@/lib/auth";
 import { fetchCloudProducts } from "@/lib/catalog";
 import { missingCloudflareEnv } from "@/lib/cloudflare";
-import { dummyProducts, inr, type Product } from "@/lib/products";
+import { dummyProducts, inr, productHref, type Product } from "@/lib/products";
 import { logout } from "./actions";
 import AdminHintSync from "./AdminHintSync";
 import DeleteButton from "./DeleteButton";
@@ -114,6 +114,9 @@ function ProductList({ products, highlightId }: { products: Product[]; highlight
                 </span>
               </div>
               <div className="actions">
+                <Link href={productHref(p.id)} className="chip">
+                  View
+                </Link>
                 <Link href={`/admin?edit=${p.id}`} className="chip">
                   Edit
                 </Link>

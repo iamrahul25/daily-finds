@@ -1,26 +1,21 @@
 import Link from "next/link";
-import { DEFAULT_BG, inr, type Product } from "@/lib/products";
+import { DEFAULT_BG, inr, productHref, type Product } from "@/lib/products";
 
-export default function ProductCard({
-  product: p,
-  onOpen,
-  editHref,
-}: {
-  product: Product;
-  onOpen: () => void;
-  editHref?: string;
-}) {
+export default function ProductCard({ product: p, editHref }: { product: Product; editHref?: string }) {
+  const photoCount = (p.image ? 1 : 0) + (p.images?.length ?? 0);
+
   return (
     <article className="card">
-      <div className="img" style={{ background: p.bg ?? DEFAULT_BG }} onClick={onOpen}>
-        {p.image ? <img src={p.image} alt={p.name} loading="lazy" /> : p.emoji}
+      <div className="img" style={{ background: p.bg ?? DEFAULT_BG }}>
+        {p.image ? <img src={p.image} alt="" loading="lazy" /> : p.emoji}
         {p.tag && <span className="tag">{p.tag}</span>}
-        {!p.image && <span className="vid">▶ video</span>}
+        {p.reel ? <span className="vid">▶ reel</span> : photoCount > 1 && <span className="vid">📷 {photoCount}</span>}
       </div>
       <div className="body">
-        <div className="name" onClick={onOpen}>
+        {/* The link stretches over the whole card, so clicking anywhere opens the product page. */}
+        <Link className="name" href={productHref(p.id)}>
           {p.name}
-        </div>
+        </Link>
         <div className="meta">
           {p.rating != null && (
             <>

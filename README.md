@@ -4,8 +4,11 @@ A Next.js affiliate catalog. Products come from two places:
 
 - **Demo products** hardcoded in `lib/products.ts` (always shown).
 - **Your products**, added at **`/admin`** and stored in Cloudflare:
-  - the text (name, price, platform, category, tag, description, buy link) in a **D1** database
-  - the image in a **Workers KV** namespace, served by the app at `/images/<key>`
+  - the text (name, price, platform, category, tag, description, buy link, reel link) in a **D1** database
+  - the cover image and up to 6 extra photos in a **Workers KV** namespace, served by the app at `/images/<key>`
+
+Clicking a product opens its own page at `/item/<id>`, with a photo gallery, the details, the reel
+(Instagram reels, YouTube Shorts/videos and `.mp4` links are embedded) and similar products.
 
 Both D1 and Workers KV are on Cloudflare's free plan, which does **not** need a credit card.
 
@@ -51,6 +54,11 @@ and copy **Account ID** from the right side. Put it in `CLOUDFLARE_ACCOUNT_ID`.
 2. Copy the **Database ID** shown on the database page into `D1_DATABASE_ID`.
 3. Open the database's **Console** tab, paste the contents of [`db/schema.sql`](db/schema.sql), and click **Execute**.
    This creates the `products` table.
+
+**Created the database before product pages had photos and reels?** Run
+[`db/migrations/001_photos_and_reel.sql`](db/migrations/001_photos_and_reel.sql) once in the same Console
+(or `npx wrangler d1 execute daily-finds --remote --file path/to/daily-finds/db/migrations/001_photos_and_reel.sql`).
+Until then the site still shows your products, but saving in `/admin` fails with a message pointing here.
 
 ### 3. Workers KV namespace for images
 
@@ -99,6 +107,7 @@ npx wrangler kv namespace create daily-finds-images
 
 ## Notes
 
-- Images can be JPG, PNG, WebP, GIF or AVIF, up to 4 MB (Vercel's request body limit is 4.5 MB).
+- Images can be JPG, PNG, WebP, GIF or AVIF. The admin form shrinks large photos in the browser before
+  uploading; all images in one save must add up to 4 MB (Vercel's request body limit is 4.5 MB).
 - Deleting a product in `/admin` removes both the D1 row and its image from KV.
 - To edit the demo products, change `dummyProducts` in `lib/products.ts`.

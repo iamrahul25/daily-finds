@@ -4,7 +4,7 @@ import { revalidatePath, updateTag } from "next/cache";
 import { checkPassword, endAdminSession, isAdmin, startAdminSession } from "@/lib/auth";
 import { createProduct, deleteProduct, PRODUCTS_TAG, updateProduct, type ProductFields } from "@/lib/catalog";
 import { isCloudflareConfigured } from "@/lib/cloudflare";
-import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES } from "@/lib/products";
+import { ALLOWED_IMAGE_TYPES, MAX_EXTRA_PHOTOS, MAX_IMAGE_BYTES, productHref } from "@/lib/products";
 
 /** `id` is the saved product's id, set when adding or editing succeeds. */
 export type FormState = { ok: boolean; message: string; id?: string } | null;
@@ -23,10 +23,15 @@ export async function logout() {
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "").trim();
 
+const files = (formData: FormData, key: string) =>
+  formData.getAll(key).filter((f): f is File => f instanceof File && f.size > 0);
+
 const toPrice = (value: string) => {
   const n = Number(value);
   return Number.isInteger(n) && n >= 0 ? n : NaN;
 };
+
+const isHttpUrl = (url: string) => /^https?:\/\//i.test(url);
 
 async function checkCanSave(): Promise<FormState> {
   if (!(await isAdmin())) return { ok: false, message: "Your session expired. Please log in again." };
@@ -34,21 +39,31 @@ async function checkCanSave(): Promise<FormState> {
   return null;
 }
 
-/** Validates the product form. Returns an error message, or the fields plus the chosen image (null if none). */
-function parseProductForm(formData: FormData): string | { fields: ProductFields; image: File | null } {
+type ParsedForm = { fields: ProductFields; image: File | null; photos: File[] };
+
+/** Validates the product form. Returns an error message, or the fields plus the chosen images. */
+function parseProductForm(formData: FormData): string | ParsedForm {
   const name = text(formData, "name");
   const store = text(formData, "store");
   const category = text(formData, "category");
   const url = text(formData, "url");
+  const reel = text(formData, "reel");
   const price = toPrice(text(formData, "price"));
-  const file = formData.get("image");
-  const image = file instanceof File && file.size > 0 ? file : null;
+  const image = files(formData, "image")[0] ?? null;
+  const photos = files(formData, "photos");
+  const allImages = image ? [image, ...photos] : photos;
 
   if (!name || !store || !category) return "Name, platform and category are required.";
   if (Number.isNaN(price)) return "Price must be a whole number (in ₹).";
-  if (!/^https?:\/\//i.test(url)) return "Buy link must start with http:// or https://";
-  if (image && !ALLOWED_IMAGE_TYPES.includes(image.type)) return "Image must be JPG, PNG, WebP, GIF or AVIF.";
-  if (image && image.size > MAX_IMAGE_BYTES) return "Image must be 4 MB or smaller.";
+  if (!isHttpUrl(url)) return "Buy link must start with http:// or https://";
+  if (reel && !isHttpUrl(reel)) return "Reel link must start with http:// or https://";
+  if (photos.length > MAX_EXTRA_PHOTOS) return `You can add at most ${MAX_EXTRA_PHOTOS} extra photos.`;
+  if (allImages.some((f) => !ALLOWED_IMAGE_TYPES.includes(f.type))) {
+    return "Images must be JPG, PNG, WebP, GIF or AVIF.";
+  }
+  if (allImages.reduce((sum, f) => sum + f.size, 0) > MAX_IMAGE_BYTES) {
+    return "Images must add up to 4 MB or less. Try fewer or smaller photos.";
+  }
 
   return {
     fields: {
@@ -57,17 +72,33 @@ function parseProductForm(formData: FormData): string | { fields: ProductFields;
       category,
       url,
       price,
+      reel,
       tag: text(formData, "tag"),
       description: text(formData, "description"),
     },
     image,
+    photos,
   };
 }
 
 const saveFailed = (err: unknown): FormState => {
   console.error(err);
-  return { ok: false, message: err instanceof Error ? err.message : "Saving failed." };
+  const message = err instanceof Error ? err.message : "Saving failed.";
+  if (/no (such )?column|has no column/i.test(message)) {
+    return {
+      ok: false,
+      message:
+        "Your D1 database is missing the photos/reel columns. Run db/migrations/001_photos_and_reel.sql in the D1 console (see README).",
+    };
+  }
+  return { ok: false, message };
 };
+
+function revalidateProduct(id: string) {
+  updateTag(PRODUCTS_TAG);
+  revalidatePath("/");
+  revalidatePath(productHref(id));
+}
 
 export async function addProduct(_prev: FormState, formData: FormData): Promise<FormState> {
   const blocked = await checkCanSave();
@@ -79,13 +110,12 @@ export async function addProduct(_prev: FormState, formData: FormData): Promise<
 
   let id: string;
   try {
-    id = await createProduct({ ...parsed.fields, image: parsed.image });
+    id = await createProduct({ ...parsed.fields, image: parsed.image, photos: parsed.photos });
   } catch (err) {
     return saveFailed(err);
   }
 
-  updateTag(PRODUCTS_TAG);
-  revalidatePath("/");
+  revalidateProduct(id);
   return { ok: true, message: `“${parsed.fields.name}” added.`, id };
 }
 
@@ -98,21 +128,23 @@ export async function editProduct(_prev: FormState, formData: FormData): Promise
 
   const id = text(formData, "id");
   try {
-    if (!(await updateProduct(id, parsed.fields, parsed.image))) {
-      return { ok: false, message: "This product no longer exists." };
-    }
+    const error = await updateProduct(id, parsed.fields, {
+      image: parsed.image,
+      addPhotos: parsed.photos,
+      removePhotos: formData.getAll("removePhoto").map(String),
+    });
+    if (error) return { ok: false, message: error };
   } catch (err) {
     return saveFailed(err);
   }
 
-  updateTag(PRODUCTS_TAG);
-  revalidatePath("/");
+  revalidateProduct(id);
   return { ok: true, message: `“${parsed.fields.name}” updated.`, id };
 }
 
 export async function removeProduct(formData: FormData) {
   if (!(await isAdmin())) throw new Error("Unauthorized");
-  await deleteProduct(text(formData, "id"));
-  updateTag(PRODUCTS_TAG);
-  revalidatePath("/");
+  const id = text(formData, "id");
+  await deleteProduct(id);
+  revalidateProduct(id);
 }

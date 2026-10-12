@@ -1,10 +1,9 @@
 import AdminBar from "@/components/AdminBar";
 import Catalog from "@/components/Catalog";
-import { getCloudProducts } from "@/lib/catalog";
-import { dummyProducts } from "@/lib/products";
+import { getCatalog } from "@/lib/catalog";
 
 export default async function Home() {
-  const cloudProducts = await getCloudProducts();
+  const { products, editableIds } = await getCatalog();
 
   return (
     <>
@@ -16,10 +15,7 @@ export default async function Home() {
         <p>Fresh finds every day, hand-picked from around the web.</p>
       </header>
 
-      <Catalog
-        products={[...cloudProducts, ...dummyProducts]}
-        editableIds={cloudProducts.map((p) => p.id)}
-      />
+      <Catalog products={products} editableIds={editableIds} />
     </>
   );
 }

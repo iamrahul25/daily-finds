@@ -8,5 +8,7 @@ CREATE TABLE IF NOT EXISTS products (
   description TEXT NOT NULL DEFAULT '',
   url TEXT NOT NULL,
   image_key TEXT NOT NULL,
+  photos TEXT NOT NULL DEFAULT '[]',
+  reel TEXT NOT NULL DEFAULT '',
   created_at INTEGER NOT NULL
 );

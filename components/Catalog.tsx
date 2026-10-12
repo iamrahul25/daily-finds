@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { useAdminHint } from "@/lib/useAdminHint";
 import type { Product } from "@/lib/products";
 import ProductCard from "./ProductCard";
-import ProductModal from "./ProductModal";
 
 type Sort = "pop" | "lo" | "hi";
 
@@ -18,7 +17,6 @@ export default function Catalog({ products, editableIds }: { products: Product[]
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("pop");
   const [category, setCategory] = useState("All");
-  const [selected, setSelected] = useState<Product | null>(null);
 
   const categories = useMemo(() => ["All", ...new Set(products.map((p) => p.category))], [products]);
 
@@ -70,7 +68,6 @@ export default function Catalog({ products, editableIds }: { products: Product[]
             <ProductCard
               key={p.id}
               product={p}
-              onOpen={() => setSelected(p)}
               editHref={isAdmin && editable.has(p.id) ? `/admin?edit=${p.id}` : undefined}
             />
           ))
@@ -78,10 +75,6 @@ export default function Catalog({ products, editableIds }: { products: Product[]
           <div className="empty">No cute things found 🥺</div>
         )}
       </main>
-
-      {selected && (
-        <ProductModal key={selected.id} product={selected} onClose={() => setSelected(null)} />
-      )}
     </>
   );
 }
