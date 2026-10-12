@@ -1,16 +1,20 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { discount, type Product } from "@/lib/products";
+import { useAdminHint } from "@/lib/useAdminHint";
+import type { Product } from "@/lib/products";
 import ProductCard from "./ProductCard";
 import ProductModal from "./ProductModal";
 
-type Sort = "pop" | "lo" | "hi" | "off";
+type Sort = "pop" | "lo" | "hi";
 
 // Newly added products have no reviews yet; keep them on top of "Most loved" in their original (newest-first) order.
 const popularity = (p: Product) => p.reviews ?? Number.MAX_SAFE_INTEGER;
 
-export default function Catalog({ products }: { products: Product[] }) {
+/** `editableIds` are products saved through /admin; the built-in demo products can't be edited there. */
+export default function Catalog({ products, editableIds }: { products: Product[]; editableIds: string[] }) {
+  const isAdmin = useAdminHint();
+  const editable = useMemo(() => new Set(editableIds), [editableIds]);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("pop");
   const [category, setCategory] = useState("All");
@@ -29,7 +33,6 @@ export default function Catalog({ products }: { products: Product[] }) {
       .sort((a, b) => {
         if (sort === "lo") return a.price - b.price;
         if (sort === "hi") return b.price - a.price;
-        if (sort === "off") return discount(b) - discount(a);
         return popularity(b) - popularity(a);
       });
   }, [products, query, sort, category]);
@@ -46,7 +49,6 @@ export default function Catalog({ products }: { products: Product[] }) {
           <option value="pop">Most loved</option>
           <option value="lo">Price: low to high</option>
           <option value="hi">Price: high to low</option>
-          <option value="off">Biggest discount</option>
         </select>
       </div>
 
@@ -64,7 +66,14 @@ export default function Catalog({ products }: { products: Product[] }) {
 
       <main className="grid">
         {list.length ? (
-          list.map((p) => <ProductCard key={p.id} product={p} onOpen={() => setSelected(p)} />)
+          list.map((p) => (
+            <ProductCard
+              key={p.id}
+              product={p}
+              onOpen={() => setSelected(p)}
+              editHref={isAdmin && editable.has(p.id) ? `/admin?edit=${p.id}` : undefined}
+            />
+          ))
         ) : (
           <div className="empty">No cute things found 🥺</div>
         )}

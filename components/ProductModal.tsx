@@ -61,7 +61,6 @@ export default function ProductModal({ product: p, onClose }: { product: Product
         )}
         <div className="price" style={{ fontSize: "1.5rem" }}>
           {inr(p.price)}
-          {p.originalPrice > 0 && <s>{inr(p.originalPrice)}</s>}
         </div>
         <br />
         <a className="btn" href={p.url} target="_blank" rel="sponsored noopener nofollow">

@@ -7,7 +7,6 @@ type ProductRow = {
   id: string;
   name: string;
   price: number;
-  original_price: number;
   store: string;
   category: string;
   tag: string;
@@ -22,7 +21,6 @@ const toProduct = (r: ProductRow): Product => ({
   image: `/images/${r.image_key}`,
   category: r.category,
   price: r.price,
-  originalPrice: r.original_price,
   store: r.store,
   tag: r.tag,
   description: r.description,
@@ -49,9 +47,9 @@ export async function getCloudProducts(): Promise<Product[]> {
   }
 }
 
-export type NewProduct = Omit<Product, "id" | "image" | "emoji" | "rating" | "reviews" | "bg"> & {
-  image: File;
-};
+export type ProductFields = Omit<Product, "id" | "image" | "emoji" | "rating" | "reviews" | "bg">;
+
+export type NewProduct = ProductFields & { image: File };
 
 const EXTENSIONS: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -71,14 +69,51 @@ export async function createProduct(p: NewProduct) {
   await kvPut(imageKey, await p.image.arrayBuffer());
   try {
     await d1Query(
-      `INSERT INTO products (id, name, price, original_price, store, category, tag, description, url, image_key, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, p.name, p.price, p.originalPrice, p.store, p.category, p.tag, p.description, p.url, imageKey, Date.now()],
+      `INSERT INTO products (id, name, price, store, category, tag, description, url, image_key, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, p.name, p.price, p.store, p.category, p.tag, p.description, p.url, imageKey, Date.now()],
     );
   } catch (err) {
     await kvDelete(imageKey).catch(() => {});
     throw err;
   }
+  return id;
+}
+
+/**
+ * Saves new details for a product, and swaps its image when a new one is given.
+ * Returns false when the product no longer exists.
+ */
+export async function updateProduct(id: string, p: ProductFields, image: File | null) {
+  const [current] = await d1Query<{ image_key: string }>("SELECT image_key FROM products WHERE id = ?", [id]);
+  if (!current) return false;
+
+  // Image URLs are cached as immutable, so a replacement image needs a fresh key.
+  const imageKey = image ? `${crypto.randomUUID()}.${EXTENSIONS[image.type]}` : current.image_key;
+  if (image) await kvPut(imageKey, await image.arrayBuffer());
+  const discardNewImage = () => (image ? kvDelete(imageKey).catch(() => {}) : undefined);
+
+  let updated: unknown[];
+  try {
+    updated = await d1Query(
+      `UPDATE products
+       SET name = ?, price = ?, store = ?, category = ?, tag = ?, description = ?, url = ?, image_key = ?
+       WHERE id = ? RETURNING id`,
+      [p.name, p.price, p.store, p.category, p.tag, p.description, p.url, imageKey, id],
+    );
+  } catch (err) {
+    await discardNewImage();
+    throw err;
+  }
+  if (!updated.length) {
+    await discardNewImage();
+    return false;
+  }
+
+  if (image) {
+    await kvDelete(current.image_key).catch((err) => console.error("Failed to delete old product image:", err));
+  }
+  return true;
 }
 
 export async function deleteProduct(id: string) {

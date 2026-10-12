@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
+import { ADMIN_HINT_COOKIE, SESSION_MAX_AGE } from "./adminHint";
 
 export const ADMIN_COOKIE = "df_admin";
 
@@ -30,15 +31,19 @@ export async function isAdmin() {
 }
 
 export async function startAdminSession() {
-  (await cookies()).set(ADMIN_COOKIE, sessionToken()!, {
-    httpOnly: true,
+  const jar = await cookies();
+  const options = {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
+    maxAge: SESSION_MAX_AGE,
+  } as const;
+  jar.set(ADMIN_COOKIE, sessionToken()!, { ...options, httpOnly: true });
+  jar.set(ADMIN_HINT_COOKIE, "1", options);
 }
 
 export async function endAdminSession() {
-  (await cookies()).delete(ADMIN_COOKIE);
+  const jar = await cookies();
+  jar.delete(ADMIN_COOKIE);
+  jar.delete(ADMIN_HINT_COOKIE);
 }

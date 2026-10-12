@@ -1,6 +1,15 @@
-import { DEFAULT_BG, discount, inr, type Product } from "@/lib/products";
+import Link from "next/link";
+import { DEFAULT_BG, inr, type Product } from "@/lib/products";
 
-export default function ProductCard({ product: p, onOpen }: { product: Product; onOpen: () => void }) {
+export default function ProductCard({
+  product: p,
+  onOpen,
+  editHref,
+}: {
+  product: Product;
+  onOpen: () => void;
+  editHref?: string;
+}) {
   return (
     <article className="card">
       <div className="img" style={{ background: p.bg ?? DEFAULT_BG }} onClick={onOpen}>
@@ -20,17 +29,15 @@ export default function ProductCard({ product: p, onOpen }: { product: Product; 
           )}
           {p.store}
         </div>
-        <div className="price">
-          {inr(p.price)}
-          {p.originalPrice > 0 && (
-            <>
-              <s>{inr(p.originalPrice)}</s> <small>{discount(p)}% off</small>
-            </>
-          )}
-        </div>
+        <div className="price">{inr(p.price)}</div>
         <a className="btn" href={p.url} target="_blank" rel="sponsored noopener nofollow">
           Buy on {p.store} ↗
         </a>
+        {editHref && (
+          <Link className="chip edit" href={editHref}>
+            ✏️ Edit
+          </Link>
+        )}
       </div>
     </article>
   );

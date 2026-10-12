@@ -6,17 +6,19 @@ import { fetchCloudProducts } from "@/lib/catalog";
 import { missingCloudflareEnv } from "@/lib/cloudflare";
 import { dummyProducts, inr, type Product } from "@/lib/products";
 import { logout } from "./actions";
-import AddProductForm from "./AddProductForm";
+import AdminHintSync from "./AdminHintSync";
 import DeleteButton from "./DeleteButton";
 import LoginForm from "./LoginForm";
+import ProductForm from "./ProductForm";
 
 export const metadata: Metadata = {
   title: "Admin – Daily Finds",
   robots: { index: false, follow: false },
 };
 
-export default async function AdminPage() {
+export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
   await connection();
+  const { add, edit, added, saved } = await searchParams;
 
   if (!isAdminPasswordSet()) {
     return (
@@ -31,6 +33,7 @@ export default async function AdminPage() {
   if (!(await isAdmin())) {
     return (
       <Shell>
+        <AdminHintSync isAdmin={false} />
         <LoginForm />
       </Shell>
     );
@@ -47,9 +50,15 @@ export default async function AdminPage() {
     }
   }
   const categories = [...new Set([...products, ...dummyProducts].map((p) => p.category))];
+  const find = (id: string | string[] | undefined) => (id ? products.find((p) => p.id === id) : undefined);
+  const editing = find(edit);
+  const adding = add !== undefined && !editing;
+  const addedProduct = find(added);
+  const savedProduct = find(saved);
 
   return (
     <Shell>
+      <AdminHintSync isAdmin />
       <div className="admin-top">
         <Link href="/">← View site</Link>
         <form action={logout}>
@@ -63,31 +72,58 @@ export default async function AdminPage() {
         </p>
       )}
       {loadError && <p className="notice error">Couldn&apos;t load products: {loadError}</p>}
-
-      <AddProductForm categories={categories} />
-
-      <section className="panel">
-        <h2>Your products ({products.length})</h2>
-        {products.length === 0 ? (
-          <p className="muted">Nothing added yet. The 8 demo products on the home page are built in.</p>
-        ) : (
-          <ul className="admin-list">
-            {products.map((p) => (
-              <li key={p.id}>
-                <img src={p.image} alt="" />
-                <div>
-                  <strong>{p.name}</strong>
-                  <span className="muted">
-                    {inr(p.price)} · {p.store} · {p.category}
-                  </span>
-                </div>
-                <DeleteButton id={p.id} name={p.name} />
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {edit && !editing && !loadError && (
+        <p className="notice error">That product doesn&apos;t exist anymore. It may have been deleted.</p>
+      )}
+      {editing || adding ? (
+        <ProductForm key={editing?.id ?? "new"} categories={categories} product={editing} />
+      ) : (
+        <>
+          {addedProduct && <p className="notice ok">“{addedProduct.name}” added.</p>}
+          {savedProduct && <p className="notice ok">“{savedProduct.name}” updated.</p>}
+          <ProductList products={products} highlightId={addedProduct?.id ?? savedProduct?.id} />
+        </>
+      )}
     </Shell>
+  );
+}
+
+function ProductList({ products, highlightId }: { products: Product[]; highlightId?: string }) {
+  return (
+    <section className="panel">
+      <div className="panel-head">
+        <h2>Your products ({products.length})</h2>
+        <Link href="/admin?add" className="btn small">
+          + Add product
+        </Link>
+      </div>
+      {products.length === 0 ? (
+        <p className="muted">
+          Nothing added yet. Click “Add product” to add your first one. The 8 demo products on the home page are
+          built in.
+        </p>
+      ) : (
+        <ul className="admin-list">
+          {products.map((p) => (
+            <li key={p.id} className={p.id === highlightId ? "highlight" : undefined}>
+              <img src={p.image} alt="" />
+              <div>
+                <strong>{p.name}</strong>
+                <span className="muted">
+                  {inr(p.price)} · {p.store} · {p.category}
+                </span>
+              </div>
+              <div className="actions">
+                <Link href={`/admin?edit=${p.id}`} className="chip">
+                  Edit
+                </Link>
+                <DeleteButton id={p.id} name={p.name} />
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
