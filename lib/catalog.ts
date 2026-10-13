@@ -1,5 +1,5 @@
 import { d1Query, isCloudflareConfigured, kvDelete, kvPut } from "./cloudflare";
-import { dummyProducts, MAX_EXTRA_PHOTOS, type Product } from "./products";
+import { MAX_EXTRA_PHOTOS, type Product } from "./products";
 
 export const PRODUCTS_TAG = "products";
 
@@ -69,7 +69,7 @@ export async function getCloudProducts(): Promise<Product[]> {
 export async function getCatalog() {
   const cloudProducts = await getCloudProducts();
   return {
-    products: [...cloudProducts, ...dummyProducts],
+    products: cloudProducts,
     editableIds: cloudProducts.map((p) => p.id),
   };
 }

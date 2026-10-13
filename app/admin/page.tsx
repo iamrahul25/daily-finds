@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { isAdmin, isAdminPasswordSet } from "@/lib/auth";
 import { fetchCloudProducts } from "@/lib/catalog";
 import { missingCloudflareEnv } from "@/lib/cloudflare";
-import { dummyProducts, inr, productHref, type Product } from "@/lib/products";
+import { inr, productHref, type Product } from "@/lib/products";
 import { logout } from "./actions";
 import AdminHintSync from "./AdminHintSync";
 import DeleteButton from "./DeleteButton";
@@ -49,7 +49,7 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
       loadError = err instanceof Error ? err.message : String(err);
     }
   }
-  const categories = [...new Set([...products, ...dummyProducts].map((p) => p.category))];
+  const categories = [...new Set(products.map((p) => p.category))];
   const find = (id: string | string[] | undefined) => (id ? products.find((p) => p.id === id) : undefined);
   const editing = find(edit);
   const adding = add !== undefined && !editing;

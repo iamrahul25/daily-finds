@@ -10,7 +10,7 @@ type Sort = "pop" | "lo" | "hi";
 // Newly added products have no reviews yet; keep them on top of "Most loved" in their original (newest-first) order.
 const popularity = (p: Product) => p.reviews ?? Number.MAX_SAFE_INTEGER;
 
-/** `editableIds` are products saved through /admin; the built-in demo products can't be edited there. */
+/** `editableIds` are products saved through /admin. */
 export default function Catalog({ products, editableIds }: { products: Product[]; editableIds: string[] }) {
   const isAdmin = useAdminHint();
   const editable = useMemo(() => new Set(editableIds), [editableIds]);

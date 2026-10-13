@@ -110,4 +110,3 @@ npx wrangler kv namespace create daily-finds-images
 - Images can be JPG, PNG, WebP, GIF or AVIF. The admin form shrinks large photos in the browser before
   uploading; all images in one save must add up to 4 MB (Vercel's request body limit is 4.5 MB).
 - Deleting a product in `/admin` removes both the D1 row and its image from KV.
-- To edit the demo products, change `dummyProducts` in `lib/products.ts`.
