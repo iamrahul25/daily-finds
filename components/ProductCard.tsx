@@ -6,7 +6,7 @@ export default function ProductCard({ product: p, editHref }: { product: Product
 
   return (
     <article className="card">
-      <div className="img" style={{ background: p.bg ?? DEFAULT_BG }}>
+      <div className="img" style={{ background: p.image ? "#fff" : p.bg ?? DEFAULT_BG }}>
         {p.image ? <img src={p.image} alt="" loading="lazy" /> : p.emoji}
         {p.tag && <span className="tag">{p.tag}</span>}
         {p.reel ? <span className="vid">▶ reel</span> : photoCount > 1 && <span className="vid">📷 {photoCount}</span>}

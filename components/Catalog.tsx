@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { ALL, categoryStyle } from "@/lib/categories";
 import { useAdminHint } from "@/lib/useAdminHint";
 import type { Product } from "@/lib/products";
 import ProductCard from "./ProductCard";
@@ -16,16 +17,16 @@ export default function Catalog({ products, editableIds }: { products: Product[]
   const editable = useMemo(() => new Set(editableIds), [editableIds]);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("pop");
-  const [category, setCategory] = useState("All");
+  const [category, setCategory] = useState(ALL);
 
-  const categories = useMemo(() => ["All", ...new Set(products.map((p) => p.category))], [products]);
+  const categories = useMemo(() => [ALL, ...new Set(products.map((p) => p.category))], [products]);
 
   const list = useMemo(() => {
     const q = query.toLowerCase();
     return products
       .filter(
         (p) =>
-          (category === "All" || p.category === category) &&
+          (category === ALL || p.category === category) &&
           (p.name + p.category + p.description).toLowerCase().includes(q),
       )
       .sort((a, b) => {
@@ -50,17 +51,31 @@ export default function Catalog({ products, editableIds }: { products: Product[]
         </select>
       </div>
 
-      <div className="chips">
-        {categories.map((c) => (
-          <button
-            key={c}
-            className={c === category ? "chip on" : "chip"}
-            onClick={() => setCategory(c)}
-          >
-            {c}
+      <section className="cats" aria-labelledby="cats-title">
+        <div className="cats-head">
+          <h2 id="cats-title">Shop by category</h2>
+          <button className="cats-all" onClick={() => setCategory(ALL)}>
+            View all →
           </button>
-        ))}
-      </div>
+        </div>
+        <div className="cats-row">
+          {categories.map((c) => {
+            const s = categoryStyle(c);
+            return (
+              <button
+                key={c}
+                className={c === category ? "cat on" : "cat"}
+                aria-pressed={c === category}
+                onClick={() => setCategory(c)}
+                style={{ "--tile": s.tile, "--accent": s.accent } as React.CSSProperties}
+              >
+                {s.icon ? <img src={s.icon} alt="" /> : <span className="cat-letter">{c.charAt(0)}</span>}
+                <span>{c}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
       <main className="grid">
         {list.length ? (
