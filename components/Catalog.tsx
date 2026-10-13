@@ -38,7 +38,7 @@ export default function Catalog({ products, editableIds }: { products: Product[]
 
   return (
     <>
-      <div className="bar">
+      <div className="bar" id="shop">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
